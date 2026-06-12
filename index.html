@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>六月行动 · 6.12–6.30</title>
+<style>
+  :root{
+    --bg:#F2F4EF; --paper:#FFFFFF; --ink:#1C2B27; --muted:#6C7A74;
+    --pine:#1F5C49; --pine-deep:#143D31; --pine-soft:#E3EDE7;
+    --amber:#E5A33C; --amber-soft:#FBF1DE;
+    --red:#C95B43; --line:#DFE6DF;
+    --radius:14px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'PingFang SC','HarmonyOS Sans SC','Noto Sans SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:18px 14px 60px;
+    max-width:560px; margin:0 auto;
+  }
+  .num{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; font-variant-numeric:tabular-nums;}
+
+  header{margin-bottom:14px;}
+  .eyebrow{font-size:.72rem; letter-spacing:.18em; color:var(--pine); font-weight:600; margin-bottom:4px;}
+  h1{font-size:1.45rem; font-weight:700; letter-spacing:.01em;}
+  h1 .range{color:var(--muted); font-weight:500; font-size:1.05rem; margin-left:6px;}
+  .sub{font-size:.82rem; color:var(--muted); margin-top:4px; line-height:1.5;}
+
+  .strip{display:grid; grid-template-columns:repeat(19,1fr); gap:3px; margin:16px 0 6px;}
+  .strip .cell{
+    height:34px; border-radius:5px; background:var(--paper); border:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:.56rem; color:var(--muted); line-height:1.25; overflow:hidden;
+  }
+  .cell b{font-size:.62rem; font-weight:600; color:inherit;}
+  .cell.done{background:var(--pine); border-color:var(--pine); color:#fff;}
+  .cell.done b{color:#fff;}
+  .cell.rested{background:var(--pine-soft); border-color:var(--pine-soft); color:var(--pine-deep);}
+  .cell.missed{background:var(--amber-soft); border-color:var(--amber-soft); color:#9A6A1B;}
+  .cell.today{outline:2px solid var(--amber); outline-offset:1px;}
+  .strip-legend{display:flex; gap:12px; font-size:.68rem; color:var(--muted); margin-bottom:18px; flex-wrap:wrap;}
+  .strip-legend span{display:flex; align-items:center; gap:4px;}
+  .dot{width:9px; height:9px; border-radius:3px; display:inline-block;}
+
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px;}
+  .card h2{font-size:.92rem; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+  .card h2::before{content:''; width:4px; height:14px; background:var(--pine); border-radius:2px;}
+
+  .stats{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px 6px;}
+  .stat{padding:6px 2px; text-align:center;}
+  .stat .v{font-size:1.4rem; font-weight:700; color:var(--pine-deep);}
+  .stat .v small{font-size:.74rem; font-weight:500; color:var(--muted);}
+  .stat .v.warn{color:var(--red);}
+  .stat .l{font-size:.68rem; color:var(--muted); margin-top:2px;}
+  .stat .d{font-size:.7rem; margin-top:2px; font-weight:600;}
+  .d.down{color:var(--pine);} .d.up{color:var(--red);} .d.flat{color:var(--muted);}
+  .passline{margin-top:12px; font-size:.72rem; color:var(--muted); text-align:center; line-height:1.6;}
+  .passline .alert{color:var(--red); font-weight:600;}
+  .bar{height:8px; background:var(--pine-soft); border-radius:4px; margin-top:8px; position:relative; overflow:visible;}
+  .bar .fill{height:100%; background:var(--pine); border-radius:4px; transition:width .4s ease; max-width:100%;}
+  .bar .mark{position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--amber);}
+
+  .frow{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;}
+  .frow.full{grid-template-columns:1fr;}
+  label{font-size:.72rem; color:var(--muted); display:block; margin-bottom:4px;}
+  input,select,textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:9px;
+    font-size:.92rem; font-family:inherit; background:#FBFCFA; color:var(--ink);
+  }
+  input:focus,select:focus{outline:2px solid var(--pine); outline-offset:0; border-color:var(--pine);}
+  .bp-pair{display:flex; align-items:center; gap:6px;}
+  .bp-pair input{min-width:0;}
+  .bp-pair .slash{color:var(--muted); font-weight:600;}
+  button.save{
+    width:100%; padding:12px; border:none; border-radius:10px; background:var(--pine);
+    color:#fff; font-size:.95rem; font-weight:600; cursor:pointer; margin-top:4px;
+  }
+  button.save:active{background:var(--pine-deep);}
+  .toast{font-size:.78rem; text-align:center; margin-top:8px; min-height:1.2em; color:var(--pine); font-weight:600;}
+  .toast.err{color:var(--red);}
+
+  .chart-wrap{overflow:hidden;}
+  .chart-empty{font-size:.8rem; color:var(--muted); text-align:center; padding:18px 0;}
+
+  .stage{font-size:.72rem; color:var(--pine); font-weight:700; letter-spacing:.06em; margin:14px 0 6px;}
+  .stage:first-of-type{margin-top:0;}
+  .day{
+    display:flex; align-items:center; gap:10px; padding:9px 6px;
+    border-bottom:1px dashed var(--line); font-size:.84rem;
+  }
+  .day:last-child{border-bottom:none;}
+  .day .date{width:52px; flex:none; font-weight:600;}
+  .day .date small{display:block; font-weight:400; color:var(--muted); font-size:.68rem;}
+  .day .txt{flex:1; line-height:1.45; color:#33433D;}
+  .day .txt .logline{display:block; font-size:.7rem; color:var(--muted); margin-top:2px;}
+  .chip{flex:none; font-size:.66rem; padding:3px 8px; border-radius:99px; font-weight:600; white-space:nowrap;}
+  .chip.done{background:var(--pine); color:#fff;}
+  .chip.rested{background:var(--pine-soft); color:var(--pine-deep);}
+  .chip.missed{background:var(--amber-soft); color:#9A6A1B;}
+  .chip.todo{background:#EEF1EE; color:var(--muted);}
+  .chip.today{background:var(--amber); color:#fff;}
+  .day.is-rest .txt{color:var(--muted);}
+
+  .diet-row{display:flex; gap:8px; margin-bottom:10px;}
+  .diet-pill{
+    flex:1; text-align:center; padding:9px 4px; border:1px solid var(--line); border-radius:9px;
+    font-size:.74rem; color:var(--muted); background:#FBFCFA; cursor:pointer; user-select:none;
+    line-height:1.35; transition:background .15s,color .15s,border-color .15s;
+  }
+  .diet-pill.on{background:var(--pine); border-color:var(--pine); color:#fff; font-weight:600;}
+  .diet-summary{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); font-size:.74rem; color:var(--muted); text-align:center; line-height:1.6;}
+  .diet-summary b{color:var(--pine-deep);}
+
+  details{font-size:.8rem; color:var(--muted); line-height:1.7;}
+  details summary{cursor:pointer; font-weight:600; color:var(--ink); font-size:.86rem; padding:2px 0;}
+  details[open] summary{margin-bottom:6px;}
+
+  .loading{text-align:center; color:var(--muted); font-size:.85rem; padding:30px 0;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none!important;} }
+  @media (max-width:380px){ .strip .cell{height:30px;} .stat .v{font-size:1.2rem;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">脂肪肝逆转 · 第一阶段</div>
+  <h1>六月行动<span class="range num">6.12 – 6.30</span></h1>
+  <div class="sub">目标 9–10 次运动，完成 7 次即达标 ·  心率区间 115–140 · 雨天切拳击不算中断</div>
+</header>
+
+<div id="app"><div class="loading">正在读取记录…</div></div>
+
+<script>
+/* ================= 计划数据 ================= */
+const YEAR = '2026';
+const PLAN = [
+  {d:'06-12',w:'周五',plan:'晚间首练 · 慢跑或拳击 30 分钟',kind:'run',stage:'启动 6.12–6.14'},
+  {d:'06-13',w:'周六',plan:'上午慢跑 35–40 分钟（雨天顺延周日）',kind:'run'},
+  {d:'06-14',w:'周日',plan:'休息 · 量腰围（基线）',kind:'rest'},
+  {d:'06-15',w:'周一',plan:'休息',kind:'rest',stage:'成型 6.15–6.21 · 本周 3 次'},
+  {d:'06-16',w:'周二',plan:'晚间 · 慢跑或拳击 30–35 分钟',kind:'run'},
+  {d:'06-17',w:'周三',plan:'休息（可与周二/四对调）',kind:'rest'},
+  {d:'06-18',w:'周四',plan:'晚间 · 慢跑或拳击 30–35 分钟',kind:'run'},
+  {d:'06-19',w:'周五',plan:'休息',kind:'rest'},
+  {d:'06-20',w:'周六',plan:'上午慢跑 40 分钟（雨天顺延周日）',kind:'run'},
+  {d:'06-21',w:'周日',plan:'休息 · 量腰围',kind:'rest'},
+  {d:'06-22',w:'周一',plan:'休息',kind:'rest',stage:'加量 6.22–6.28 · 本周 4 次'},
+  {d:'06-23',w:'周二',plan:'晚间 · 慢跑或拳击 35 分钟',kind:'run'},
+  {d:'06-24',w:'周三',plan:'休息',kind:'rest'},
+  {d:'06-25',w:'周四',plan:'晚间 · 慢跑或拳击 35 分钟',kind:'run'},
+  {d:'06-26',w:'周五',plan:'休息',kind:'rest'},
+  {d:'06-27',w:'周六',plan:'上午长跑 45–50 分钟（本月最长）',kind:'run'},
+  {d:'06-28',w:'周日',plan:'晚间拳击 30 分钟（恢复强度，累可免）· 量腰围',kind:'optional'},
+  {d:'06-29',w:'周一',plan:'休息',kind:'rest',stage:'收官 6.29–6.30'},
+  {d:'06-30',w:'周二',plan:'晚间收官 35 分钟 + 月底复盘',kind:'run'},
+];
+const STORE_KEY = 'june2026_logs';
+const TARGET = 10, PASS = 7;
+
+let logs = {};
+
+/* ============ 存储适配：Claude 内用 window.storage，独立部署时自动切换浏览器本地存储 ============ */
+const store = {
+  async get(k){
+    if (typeof window.storage !== 'undefined' && window.storage){
+      try{ return await window.storage.get(k); }catch(e){ return null; }
+    }
+    try{ const v = localStorage.getItem(k); return v ? {value:v} : null; }catch(e){ return null; }
+  },
+  async set(k,v){
+    if (typeof window.storage !== 'undefined' && window.storage){
+      const r = await window.storage.set(k,v);
+      if (!r) throw new Error('storage failed');
+      return r;
+    }
+    localStorage.setItem(k,v);
+    return {key:k};
+  }
+};
+
+/* ================= 工具 ================= */
+const fullDate = d => `${YEAR}-${d}`;
+function todayStr(){
+  const n = new Date();
+  const m = String(n.getMonth()+1).padStart(2,'0');
+  const dd = String(n.getDate()).padStart(2,'0');
+  return `${n.getFullYear()}-${m}-${dd}`;
+}
+const TODAY = todayStr();
+const isWorkout = l => l && l.ex && l.ex !== '休息' && Number(l.min) >= 10;
+
+function dayStatus(p){
+  const fd = fullDate(p.d), l = logs[fd];
+  if (l){
+    if (isWorkout(l)) return 'done';
+    if (p.kind === 'rest') return 'rested';
+    return fd < TODAY ? 'missed' : (fd === TODAY ? 'today' : 'todo');
+  }
+  if (fd === TODAY) return 'today';
+  if (fd < TODAY) return p.kind === 'rest' ? 'rested-empty' : 'missed';
+  return 'todo';
+}
+const chipText = {done:'已完成', rested:'休息 ✓', 'rested-empty':'休息', missed:'未打卡', todo:'待进行', today:'今天'};
+
+async function loadLogs(){
+  try{
+    const r = await store.get(STORE_KEY);
+    if (r && r.value) logs = JSON.parse(r.value);
+  }catch(e){ logs = {}; }
+}
+async function saveLogs(){ await store.set(STORE_KEY, JSON.stringify(logs)); }
+
+/* ================= 渲染 ================= */
+function render(){
+  const app = document.getElementById('app');
+
+  const allLogs = PLAN.map(p=>({fd:fullDate(p.d), l:logs[fullDate(p.d)]})).filter(x=>x.l);
+  const doneCount = allLogs.filter(x=>isWorkout(x.l)).length;
+
+  const weightEntries = allLogs.filter(x=>x.l.weight).map(x=>({fd:x.fd, v:Number(x.l.weight)}));
+  const sleepVals = allLogs.filter(x=>x.l.sleep).map(x=>Number(x.l.sleep));
+  const hrEntries = allLogs.filter(x=>x.l.hr).map(x=>({fd:x.fd, v:Number(x.l.hr)}));
+  const bpEntries = allLogs.filter(x=>x.l.sbp && x.l.dbp).map(x=>({fd:x.fd, s:Number(x.l.sbp), d:Number(x.l.dbp)}));
+  const waistVals = allLogs.filter(x=>x.l.waist).map(x=>Number(x.l.waist));
+
+  const latestW = weightEntries.length ? weightEntries[weightEntries.length-1] : null;
+  const firstW  = weightEntries.length ? weightEntries[0] : null;
+  const deltaW  = (latestW && firstW && weightEntries.length>1) ? (latestW.v - firstW.v) : null;
+  const avgSleep = sleepVals.length ? sleepVals.reduce((a,b)=>a+b,0)/sleepVals.length : null;
+  const latestHR = hrEntries.length ? hrEntries[hrEntries.length-1].v : null;
+  const latestBP = bpEntries.length ? bpEntries[bpEntries.length-1] : null;
+  const avgS = bpEntries.length ? bpEntries.reduce((a,b)=>a+b.s,0)/bpEntries.length : null;
+  const avgD = bpEntries.length ? bpEntries.reduce((a,b)=>a+b.d,0)/bpEntries.length : null;
+  const bpWarn = avgS !== null && (avgS >= 135 || avgD >= 85);
+  const latestWaist = waistVals.length ? waistVals[waistVals.length-1] : null;
+
+  /* 饮食三连统计：分母 = 已过去的计划天数 */
+  const elapsed = PLAN.filter(p=>fullDate(p.d) <= TODAY).length;
+  const dietCnt = {sugar:0, dinner:0, noon:0};
+  allLogs.forEach(x=>{
+    if (x.l.diet){
+      if (x.l.diet.sugar) dietCnt.sugar++;
+      if (x.l.diet.dinner) dietCnt.dinner++;
+      if (x.l.diet.noon) dietCnt.noon++;
+    }
+  });
+  const dietTotal = dietCnt.sugar + dietCnt.dinner + dietCnt.noon;
+  const dietRate = elapsed > 0 ? Math.round(dietTotal/(elapsed*3)*100) : null;
+
+  const stripCells = PLAN.map(p=>{
+    const st = dayStatus(p);
+    const cls = st==='done'?'done': st==='rested'||st==='rested-empty'?'rested': st==='missed'?'missed':'';
+    const today = fullDate(p.d)===TODAY ? ' today':'';
+    return `<div class="cell ${cls}${today}"><b class="num">${parseInt(p.d.slice(3))}</b></div>`;
+  }).join('');
+
+  let chartHtml = '<div class="chart-empty">记录两天以上体重后，这里会画出趋势线</div>';
+  if (weightEntries.length >= 2){
+    const W=480,H=120,P=26;
+    const vs = weightEntries.map(e=>e.v);
+    const mn = Math.min(...vs), mx = Math.max(...vs);
+    const span = (mx-mn) < 1 ? 1 : (mx-mn);
+    const x = i => P + i*(W-2*P)/(weightEntries.length-1);
+    const y = v => H-P - (v-mn)/span*(H-2*P);
+    const pts = weightEntries.map((e,i)=>`${x(i).toFixed(1)},${y(e.v).toFixed(1)}`).join(' ');
+    const dots = weightEntries.map((e,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(e.v).toFixed(1)}" r="3" fill="#1F5C49"/>`).join('');
+    const li = weightEntries.length-1;
+    chartHtml = `<div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="体重趋势">
+      <text x="${P}" y="${y(mx)-8}" font-size="10" fill="#6C7A74" class="num">${mx.toFixed(1)}</text>
+      <text x="${P}" y="${y(mn)+14}" font-size="10" fill="#6C7A74" class="num">${mn.toFixed(1)}</text>
+      <polyline points="${pts}" fill="none" stroke="#1F5C49" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+      <text x="${x(li).toFixed(1)}" y="${(y(weightEntries[li].v)-8).toFixed(1)}" font-size="11" font-weight="700" fill="#143D31" text-anchor="end" class="num">${weightEntries[li].v.toFixed(1)}斤</text>
+    </svg></div>`;
+  }
+
+  let planHtml = '';
+  PLAN.forEach(p=>{
+    if (p.stage) planHtml += `<div class="stage">${p.stage}</div>`;
+    const fd = fullDate(p.d), st = dayStatus(p), l = logs[fd];
+    const chipCls = st==='rested-empty' ? 'rested' : st;
+    let logline = '';
+    if (l){
+      const bits = [];
+      if (isWorkout(l)) bits.push(`${l.ex} ${l.min}分钟`);
+      if (l.weight) bits.push(`${l.weight}斤`);
+      if (l.sbp && l.dbp) bits.push(`血压${l.sbp}/${l.dbp}`);
+      if (l.hr) bits.push(`静息${l.hr}`);
+      if (l.sleep) bits.push(`睡${l.sleep}h`);
+      if (l.waist) bits.push(`腰围${l.waist}cm`);
+      if (l.diet){
+        const n = (l.diet.sugar?1:0)+(l.diet.dinner?1:0)+(l.diet.noon?1:0);
+        bits.push(`饮食${n}/3`);
+      }
+      if (l.note) bits.push(l.note);
+      if (bits.length) logline = `<span class="logline">${bits.join(' · ')}</span>`;
+    }
+    planHtml += `<div class="day ${p.kind==='rest'?'is-rest':''}">
+      <div class="date"><span class="num">${p.d.replace('-','/')}</span><small>${p.w}</small></div>
+      <div class="txt">${p.plan}${logline}</div>
+      <span class="chip ${chipCls}">${chipText[st]}</span>
+    </div>`;
+  });
+
+  const minD = fullDate('06-12'), maxD = fullDate('06-30');
+  const defD = TODAY < minD ? minD : (TODAY > maxD ? maxD : TODAY);
+
+  const bpNote = bpEntries.length
+    ? (bpWarn
+        ? `<span class="alert">家测血压平均 ${Math.round(avgS)}/${Math.round(avgD)}，已达 135/85 — 建议带记录去心内科评估</span>`
+        : `家测血压平均 ${Math.round(avgS)}/${Math.round(avgD)}（共 ${bpEntries.length} 天）· 低于 135/85，继续观察`)
+    : '血压建议早上起床后测：安静坐 5 分钟，连测 2 次取平均';
+
+  app.innerHTML = `
+    <div class="strip">${stripCells}</div>
+    <div class="strip-legend">
+      <span><i class="dot" style="background:var(--pine)"></i>运动完成</span>
+      <span><i class="dot" style="background:var(--pine-soft)"></i>休息</span>
+      <span><i class="dot" style="background:var(--amber-soft)"></i>未打卡</span>
+      <span><i class="dot" style="background:#fff;border:1px solid var(--line)"></i>待进行</span>
+    </div>
+
+    <div class="card">
+      <h2>本月进度</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="v num">${doneCount}<small> / ${TARGET}</small></div>
+          <div class="l">运动次数（达标 ${PASS}）</div>
+        </div>
+        <div class="stat">
+          <div class="v num">${latestW ? latestW.v.toFixed(1) : '–'}<small> 斤</small></div>
+          <div class="l">最新体重</div>
+          ${deltaW!==null ? `<div class="d num ${deltaW<0?'down':deltaW>0?'up':'flat'}">${deltaW>0?'+':''}${deltaW.toFixed(1)} 斤</div>` : ''}
+        </div>
+        <div class="stat">
+          <div class="v num">${avgSleep ? avgSleep.toFixed(1) : '–'}<small> h</small></div>
+          <div class="l">平均睡眠</div>
+          ${latestWaist ? `<div class="d flat num">腰围 ${latestWaist}cm</div>` : ''}
+        </div>
+        <div class="stat">
+          <div class="v num ${latestHR && latestHR>100 ? 'warn':''}">${latestHR ?? '–'}<small> 次/分</small></div>
+          <div class="l">静息心率（最新）</div>
+        </div>
+        <div class="stat">
+          <div class="v num">${latestBP ? latestBP.s+'/'+latestBP.d : '–'}</div>
+          <div class="l">血压（最新）</div>
+        </div>
+        <div class="stat">
+          <div class="v num ${bpWarn ? 'warn':''}">${avgS!==null ? Math.round(avgS)+'/'+Math.round(avgD) : '–'}</div>
+          <div class="l">血压（平均）</div>
+        </div>
+      </div>
+      <div class="bar"><div class="fill" style="width:${Math.min(doneCount/TARGET*100,100)}%"></div><div class="mark" style="left:${PASS/TARGET*100}%"></div></div>
+      <div class="passline">琥珀色刻度 = 及格线 ${PASS} 次 · 雨天打拳击、极累日健身环 20 分钟，都算完成<br>${bpNote}</div>
+      <div class="diet-summary">饮食三连（${elapsed} 天里）：戒糖饮 <b class="num">${dietCnt.sugar}</b> 天 · 晚饭七八分饱 <b class="num">${dietCnt.dinner}</b> 天 · 午后散步+午休 <b class="num">${dietCnt.noon}</b> 天${dietRate!==null ? ` · 执行率 <b class="num">${dietRate}%</b>` : ''}</div>
+    </div>
+
+    <div class="card">
+      <h2>今日打卡</h2>
+      <div class="frow">
+        <div><label>日期</label><input type="date" id="f-date" min="${minD}" max="${maxD}" value="${defD}"></div>
+        <div><label>体重（斤，早上空腹）</label><input type="number" id="f-weight" step="0.1" inputmode="decimal" placeholder="如 149.7"></div>
+      </div>
+      <div class="frow">
+        <div><label>静息心率（晨起，次/分）</label><input type="number" id="f-hr" inputmode="numeric" placeholder="如 72"></div>
+        <div><label>血压（高压 / 低压 mmHg）</label>
+          <div class="bp-pair">
+            <input type="number" id="f-sbp" inputmode="numeric" placeholder="136">
+            <span class="slash">/</span>
+            <input type="number" id="f-dbp" inputmode="numeric" placeholder="81">
+          </div>
+        </div>
+      </div>
+      <div class="frow">
+        <div><label>昨晚睡眠（小时）</label><input type="number" id="f-sleep" step="0.5" inputmode="decimal" placeholder="如 7"></div>
+        <div><label>腰围（cm，每周日填）</label><input type="number" id="f-waist" step="0.5" inputmode="decimal" placeholder="选填"></div>
+      </div>
+      <div class="frow">
+        <div><label>运动类型</label>
+          <select id="f-ex">
+            <option value="">未运动 / 还没练</option>
+            <option>慢跑</option>
+            <option>有氧拳击3</option>
+            <option>健身环</option>
+            <option>其他</option>
+            <option>休息</option>
+          </select>
+        </div>
+        <div><label>时长（分钟）</label><input type="number" id="f-min" inputmode="numeric" placeholder="如 30"></div>
+      </div>
+      <div class="frow full">
+        <div><label>饮食三连（点亮即完成）</label>
+          <div class="diet-row">
+            <div class="diet-pill" id="f-d-sugar">没喝<br>含糖饮料</div>
+            <div class="diet-pill" id="f-d-dinner">晚饭<br>七八分饱</div>
+            <div class="diet-pill" id="f-d-noon">午后散步<br>+午休闭眼</div>
+          </div>
+        </div>
+      </div>
+      <div class="frow full">
+        <div><label>备注</label><input type="text" id="f-note" maxlength="40" placeholder="选填：状态、配速、天气…"></div>
+      </div>
+      <button class="save" id="f-save">保存记录</button>
+      <div class="toast" id="f-toast"></div>
+    </div>
+
+    <div class="card">
+      <h2>体重趋势</h2>
+      ${chartHtml}
+    </div>
+
+    <div class="card">
+      <h2>计划与完成情况</h2>
+      ${planHtml}
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>备用规则 & 保护要点</summary>
+        下雨 / 雾霾 → 同时段改室内有氧拳击3，时长不变<br>
+        极累的一天 → 健身环 20 分钟也算完成<br>
+        生病、严重失眠 → 直接休息不补练<br>
+        工作日训练可在周二/三/四间挪动，一周凑满 2 次即可<br>
+        跑前快走 5 分钟热身，跑后拉伸腰背 5 分钟（护腰椎）<br>
+        不跳绳、不憋气发力（护眼）· 运动心率超 150 就放慢<br>
+        血压测法：早上起床后安静坐 5 分钟，连测 2 次取平均填入<br>
+        家测血压平均 ≥135/85 → 带记录去心内科 · 静息心率持续 &gt;100 → 同就诊<br>
+        月底复盘：完成 ≥7 次 + 体重趋势向下 = 成功，7 月照第 4 周节奏延续
+      </details>
+    </div>
+  `;
+
+  const $ = id => document.getElementById(id);
+  const dietIds = {sugar:'f-d-sugar', dinner:'f-d-dinner', noon:'f-d-noon'};
+  Object.values(dietIds).forEach(id=>{
+    $(id).addEventListener('click', ()=> $(id).classList.toggle('on'));
+  });
+  function fillForm(fd){
+    const l = logs[fd] || {};
+    $('f-weight').value = l.weight ?? '';
+    $('f-hr').value     = l.hr ?? '';
+    $('f-sbp').value    = l.sbp ?? '';
+    $('f-dbp').value    = l.dbp ?? '';
+    $('f-sleep').value  = l.sleep ?? '';
+    $('f-waist').value  = l.waist ?? '';
+    $('f-ex').value     = l.ex ?? '';
+    $('f-min').value    = l.min ?? '';
+    $('f-note').value   = l.note ?? '';
+    Object.entries(dietIds).forEach(([k,id])=>{
+      $(id).classList.toggle('on', !!(l.diet && l.diet[k]));
+    });
+  }
+  fillForm($('f-date').value);
+  $('f-date').addEventListener('change', e => fillForm(e.target.value));
+
+  $('f-save').addEventListener('click', async ()=>{
+    const fd = $('f-date').value;
+    const toast = $('f-toast');
+    if (!fd){ toast.textContent='请选择日期'; toast.className='toast err'; return; }
+    const sbp = $('f-sbp').value, dbp = $('f-dbp').value;
+    if ((sbp && !dbp) || (!sbp && dbp)){
+      toast.textContent='血压请把高压、低压都填上'; toast.className='toast err'; return;
+    }
+    const entry = {};
+    if ($('f-weight').value) entry.weight = $('f-weight').value;
+    if ($('f-hr').value)     entry.hr     = $('f-hr').value;
+    if (sbp && dbp){ entry.sbp = sbp; entry.dbp = dbp; }
+    if ($('f-sleep').value)  entry.sleep  = $('f-sleep').value;
+    if ($('f-waist').value)  entry.waist  = $('f-waist').value;
+    if ($('f-ex').value)     entry.ex     = $('f-ex').value;
+    if ($('f-min').value)    entry.min    = $('f-min').value;
+    if ($('f-note').value.trim()) entry.note = $('f-note').value.trim();
+    const diet = {};
+    Object.entries(dietIds).forEach(([k,id])=>{ if ($(id).classList.contains('on')) diet[k] = 1; });
+    if (Object.keys(diet).length) entry.diet = diet;
+    if (Object.keys(entry).length === 0){
+      delete logs[fd];
+    } else {
+      logs[fd] = entry;
+    }
+    $('f-save').disabled = true;
+    try{
+      await saveLogs();
+      toast.textContent = '已保存 ✓'; toast.className='toast';
+      setTimeout(render, 500);
+    }catch(e){
+      toast.textContent = '保存失败，请重试'; toast.className='toast err';
+      $('f-save').disabled = false;
+    }
+  });
+}
+
+(async function(){
+  await loadLogs();
+  render();
+})();
+</script>
+</body>
+</html>
